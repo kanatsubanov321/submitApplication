@@ -2,13 +2,14 @@ package com.example.demo.model;
 
 import com.example.demo.enums.Router;
 import com.example.demo.enums.WhereDidYouInformAboutUs;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import lombok.Data;
+
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Data
+
 public class Application {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,11 +22,16 @@ public class Application {
     private Router router;
     private LocalDateTime time;
 
+    @OneToOne
+    @JoinColumn(name = "client_id")
+    private Client client;
+
     public Application() {
     }
 
-    public Application(String fio, String address, String phone,
-                       String email, WhereDidYouInformAboutUs whereDidYouInformAboutUs, Router router, LocalDateTime time) {
+    public Application(String fio, String address, String phone, String email,
+                       WhereDidYouInformAboutUs whereDidYouInformAboutUs,
+                       Router router, LocalDateTime time, Client client) {
         this.fio = fio;
         this.address = address;
         this.phone = phone;
@@ -45,6 +51,14 @@ public class Application {
         this.whereDidYouInformAboutUs = whereDidYouInformAboutUs;
         this.router = router;
         this.time = time;
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
     }
 
     public Router getRouter() {

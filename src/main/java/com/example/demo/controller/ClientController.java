@@ -21,7 +21,7 @@ public class ClientController {
     @GetMapping("/{id}")
     public Client getClientById(@PathVariable Long id,
                                 @RequestHeader(name = "client-phone") String phone) {
-        if (!clientService.checkClientPhone(id, phone)) {
+        if (clientService.checkClientPhone(id, phone)) {
             return null;
         }
         return this.clientService.findClientById(id);

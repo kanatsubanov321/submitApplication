@@ -5,7 +5,6 @@ import com.example.demo.model.Client;
 import com.example.demo.service.ApplicationService;
 import com.example.demo.service.ClientService;
 import com.example.demo.utils.Response;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,10 +13,15 @@ import java.util.List;
 @RestController
 @RequestMapping("api/v1/app")
 public class ApplicationController {
-    @Autowired
-    private ApplicationService appService;
-    @Autowired
-    private ClientService clientService;
+    private final ApplicationService appService;
+
+    private final ClientService clientService;
+
+    public ApplicationController(ApplicationService appService,
+                                 ClientService clientService) {
+        this.appService = appService;
+        this.clientService = clientService;
+    }
 
     @GetMapping
     public List<Application> getApplications() {
@@ -29,17 +33,31 @@ public class ApplicationController {
         return this.appService.findApplicationById(id);
     }
 
-    @PostMapping("confirm")
+    @PostMapping("/submit")
     @ResponseStatus(HttpStatus.CREATED)
     public Response submitApplication(@RequestBody Application app) {
-        this.appService.saveApplication(app);
+        Application application = this.appService.saveApplication(app);
         try {
-            return new Response(true,
-                    "Your application is accepted",
-                    clientService.findClientById(app.getId()));
+            if (checkClient(application)) {
+                return new Response(true,
+                        "Your application is accepted",
+                        clientService.findClientById(app.getId()));
+            } else {
+                return new Response(false, "You have already submit application", null);
+            }
         } catch (Exception e) {
             return new Response(false, e.toString(), null);
         }
+    }
+
+    private boolean checkClient(Application application) {
+        List<Client> clients = clientService.findAllClients();
+        for (Client client : clients) {
+            if (!client.getFio().equals(application.getClient().getFio())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @PutMapping
@@ -57,12 +75,4 @@ public class ApplicationController {
         this.appService.deleteAllApplications();
     }
 
-    @GetMapping("/{id}/client")
-    private Client getClientByApp(@PathVariable Long id,
-                                        @RequestHeader(name = "client-phone") String phone) {
-        if (!clientService.checkClientPhone(id, phone)) {
-            return null;
-        }
-        return clientService.findClientById(id);
-    }
 }
